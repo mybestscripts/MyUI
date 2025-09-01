@@ -1,4 +1,4 @@
--- Canvas Document: Full Rayfield-Style UI Library with Everything
+-- Canvas Document: Full Rayfield-Style UI Library with Minimize, Scroll, and Resizable Window
 
 local MyUI = {}
 
@@ -22,6 +22,7 @@ function MyUI:CreateWindow(options)
     mainFrame.Active = true
     mainFrame.Draggable = true
 
+    -- Rounded Corners
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 12)
     corner.Parent = mainFrame
@@ -35,12 +36,14 @@ function MyUI:CreateWindow(options)
     topBar.Parent = mainFrame
 
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 1, 0)
+    title.Size = UDim2.new(1, -100, 1, 0)
     title.BackgroundTransparency = 1
     title.Text = options.Name or "My UI"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 26
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Position = UDim2.new(0, 15, 0, 0)
     title.Parent = topBar
 
     -- Close Button
@@ -60,6 +63,27 @@ function MyUI:CreateWindow(options)
 
     closeBtn.MouseButton1Click:Connect(function()
         screenGui:Destroy()
+    end)
+
+    -- Minimize Button
+    local minBtn = Instance.new("TextButton")
+    minBtn.Size = UDim2.new(0, 40, 0, 40)
+    minBtn.Position = UDim2.new(1, -90, 0, 5)
+    minBtn.BackgroundColor3 = Color3.fromRGB(100,100,100)
+    minBtn.Text = "-"
+    minBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    minBtn.Font = Enum.Font.GothamBold
+    minBtn.TextSize = 24
+    minBtn.Parent = topBar
+
+    local minCorner = Instance.new("UICorner")
+    minCorner.CornerRadius = UDim.new(0,6)
+    minCorner.Parent = minBtn
+
+    local isMinimized = false
+    minBtn.MouseButton1Click:Connect(function()
+        isMinimized = not isMinimized
+        mainFrame.Size = isMinimized and UDim2.new(0, 500, 0, 50) or UDim2.new(0, 500, 0, 600)
     end)
 
     -- Tabs Container
@@ -111,11 +135,16 @@ function MyUI:CreateWindow(options)
             contentFrame.Visible = true
         end)
 
-        -- UI Elements functions
+        -- Automatic content layout
+        local layout = Instance.new("UIListLayout")
+        layout.Parent = contentFrame
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0,10)
+
+        -- UI Elements functions (Button, Toggle, ColorPicker, TextBox)
         function tab:CreateButton(opts)
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(0, 200, 0, 45)
-            btn.Position = UDim2.new(0, 20, 0, (#contentFrame:GetChildren()-1)*55)
             btn.BackgroundColor3 = Color3.fromRGB(75,75,85)
             btn.BorderSizePixel = 0
             btn.Text = opts.Name or "Button"
@@ -136,7 +165,6 @@ function MyUI:CreateWindow(options)
         function tab:CreateToggle(opts)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(0, 200, 0, 45)
-            frame.Position = UDim2.new(0, 20, 0, (#contentFrame:GetChildren()-1)*55)
             frame.BackgroundColor3 = Color3.fromRGB(75,75,85)
             frame.Parent = contentFrame
 
@@ -175,7 +203,6 @@ function MyUI:CreateWindow(options)
         function tab:CreateColorPicker(opts)
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(0, 200, 0, 45)
-            btn.Position = UDim2.new(0, 20, 0, (#contentFrame:GetChildren()-1)*55)
             btn.BackgroundColor3 = opts.Default or Color3.fromRGB(255,255,255)
             btn.Text = opts.Name or "Color"
             btn.TextColor3 = Color3.fromRGB(0,0,0)
@@ -195,7 +222,6 @@ function MyUI:CreateWindow(options)
         function tab:CreateTextbox(opts)
             local box = Instance.new("TextBox")
             box.Size = UDim2.new(0, 200, 0, 45)
-            box.Position = UDim2.new(0, 20, 0, (#contentFrame:GetChildren()-1)*55)
             box.BackgroundColor3 = Color3.fromRGB(75,75,85)
             box.TextColor3 = Color3.fromRGB(255,255,255)
             box.PlaceholderText = opts.Placeholder or "Enter Text"
@@ -212,9 +238,9 @@ function MyUI:CreateWindow(options)
             end)
         end
 
-        table.insert(tabs, tab)
         tab.Button = tabButton
         tab.Content = contentFrame
+        table.insert(tabs, tab)
         return tab
     end
 
