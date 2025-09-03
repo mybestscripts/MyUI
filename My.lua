@@ -1,9 +1,279 @@
--- Canvas Document: Full Rayfield-Style UI Library with Minimize, Scroll, and Resizable Window
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local GuiService = game:GetService("GuiService")
+local UserInputService = game:GetService("UserInputService")
 
-local MyUI = {}
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
-function MyUI:CreateWindow(options)
-    local window = {}
+-- Main ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ModernUI"
+screenGui.Parent = playerGui
+
+-- Main Window Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- Rounded corners for main window
+local uicorner = Instance.new("UICorner")
+uicorner.CornerRadius = UDim.new(0, 12)
+uicorner.Parent = mainFrame
+
+-- Header Bar
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 40)
+header.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+header.Parent = mainFrame
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 12)
+headerCorner.Parent = header
+
+-- Title Label
+local title = Instance.new("TextLabel")
+title.Text = "Modern UI"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, -80, 1, 0)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
+
+-- Minimize Button
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+minimizeBtn.Position = UDim2.new(1, -40, 0, 5)
+minimizeBtn.Text = "–"
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+minimizeBtn.Font = Enum.Font.SourceSansBold
+minimizeBtn.TextSize = 20
+minimizeBtn.Parent = header
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimizeBtn
+
+-- Content Area (with ScrollingFrame)
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, -40)
+scrollFrame.Position = UDim2.new(0, 0, 0, 40)
+scrollFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+scrollFrame.ScrollBarThickness = 8
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.Parent = mainFrame
+
+local contentLayout = Instance.new("UIListLayout")
+contentLayout.Padding = UDim.new(0, 10)
+contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+contentLayout.Parent = scrollFrame
+
+local contentPadding = Instance.new("UIPadding")
+contentPadding.PaddingTop = UDim.new(0, 10)
+contentPadding.PaddingLeft = UDim.new(0, 10)
+contentPadding.PaddingRight = UDim.new(0, 10)
+contentPadding.Parent = scrollFrame
+
+-- Function to update CanvasSize for scrolling
+local function updateCanvas()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 10)
+end
+contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+
+-- Toggle Switch Example
+local function createToggle(parent, text)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, -20, 0, 30)
+	frame.BackgroundTransparency = 1
+	frame.Parent = parent
+
+	local label = Instance.new("TextLabel")
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.Font = Enum.Font.SourceSans
+	label.TextSize = 16
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(0, 150, 1, 0)
+	label.Parent = frame
+
+	local toggleFrame = Instance.new("TextButton")
+	toggleFrame.Size = UDim2.new(0, 50, 0, 25)
+	toggleFrame.Position = UDim2.new(0, 180, 0, 2)
+	toggleFrame.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+	toggleFrame.AutoButtonColor = false
+	toggleFrame.Parent = frame
+
+	local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 12)
+toggleCorner.Parent = toggleFrame
+
+	local toggleKnob = Instance.new("Frame")
+toggleKnob.Size = UDim2.new(0, 20, 0, 20)
+toggleKnob.Position = UDim2.new(0, 2, 0, 2)
+toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+toggleKnob.Parent = toggleFrame
+
+	local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(0, 10)
+knobCorner.Parent = toggleKnob
+
+	local toggled = false
+
+toggleFrame.MouseButton1Click:Connect(function()
+	toggled = not toggled
+	local goal = {}
+	if toggled then
+		goal.Position = UDim2.new(1, -22, 0, 2)
+		toggleFrame.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+	else
+		goal.Position = UDim2.new(0, 2, 0, 2)
+		toggleFrame.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+	end
+	TweenService:Create(toggleKnob, TweenInfo.new(0.2), goal):Play()
+end)
+
+	return frame
+end
+
+-- Example toggle
+createToggle(scrollFrame, "Enable Feature")
+
+-- Regular Button Example
+local function createButton(parent, text)
+	local btn = Instance.new("TextButton")
+	btn.Text = text
+	btn.Size = UDim2.new(1, -20, 0, 40)
+	btn.BackgroundColor3 = Color3.fromRGB(70, 70, 200)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 16
+	btn.AutoButtonColor = false
+	btn.Parent = parent
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 10)
+	btnCorner.Parent = btn
+
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(90, 90, 220)}):Play()
+	end)
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 200)}):Play()
+	end)
+	btn.MouseButton1Click:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 50, 180)}):Play()
+		print(text .. " clicked!")
+		wait(0.1)
+		btn.BackgroundColor3 = Color3.fromRGB(70, 70, 200)
+	end)
+
+	return btn
+end
+
+createButton(scrollFrame, "Click Me")
+
+-- Text Input Example
+local function createTextInput(parent, placeholder)
+	local tb = Instance.new("TextBox")
+	tb.PlaceholderText = placeholder
+	tb.Size = UDim2.new(1, -20, 0, 30)
+	tb.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+	tb.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tb.Font = Enum.Font.SourceSans
+	tb.TextSize = 16
+	tb.ClearTextOnFocus = false
+	tb.Parent = parent
+
+	local tbCorner = Instance.new("UICorner")
+tbCorner.CornerRadius = UDim.new(0, 8)
+tbCorner.Parent = tb
+
+	tb.Focused:Connect(function()
+		TweenService:Create(tb, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(90, 90, 90)}):Play()
+	end)
+	tb.FocusLost:Connect(function()
+		TweenService:Create(tb, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+	end)
+
+	return tb
+end
+
+createTextInput(scrollFrame, "Enter text...")
+
+-- Minimize Functionality
+local minimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	local goal = {Size = minimized and UDim2.new(1,0,0,40) or UDim2.new(1,0,1,-40)}
+	TweenService:Create(mainFrame, TweenInfo.new(0.3), goal):Play()
+	minimizeBtn.Text = minimized and "+" or "–"
+end)
+
+-- Resume feature
+GuiService.MenuClosed:Connect(function()
+	if minimized then
+		minimized = false
+		local goal = {Size = UDim2.new(1,0,1,-40)}
+		TweenService:Create(mainFrame, TweenInfo.new(0.3), goal):Play()
+		minimizeBtn.Text = "–"
+	end
+end)
+
+-- Dragging Functionality
+local dragging = false
+local dragInput, mousePos, framePos
+
+header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		mousePos = input.Position
+		framePos = mainFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+header.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - mousePos
+		mainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+	end
+end)
+			end
+		end)
+	end
+end)
+
+header.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - mousePos
+		mainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+	end
+end)
+    
 
     -- ScreenGui
     local screenGui = Instance.new("ScreenGui")
